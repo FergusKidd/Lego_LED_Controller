@@ -162,7 +162,37 @@ void runMode1() {
   delay(2000);
 }
 
-// MODE 2: Living mode (random section activation)
+// Helper function to find the paired section (A pairs with B, B pairs with A)
+int findPairedSection(int sectionIndex) {
+  const char* currentName = sections[sectionIndex].name;
+  
+  // Check if this section has "A" or "B" in its name
+  if(strstr(currentName, " A") != NULL) {
+    // This is an "A" section, find the corresponding "B" section
+    String baseName = String(currentName);
+    baseName.replace(" A", " B");
+    
+    for(int i = 0; i < NUM_SECTIONS; i++) {
+      if(baseName.equals(sections[i].name)) {
+        return i;
+      }
+    }
+  } else if(strstr(currentName, " B") != NULL) {
+    // This is a "B" section, find the corresponding "A" section
+    String baseName = String(currentName);
+    baseName.replace(" B", " A");
+    
+    for(int i = 0; i < NUM_SECTIONS; i++) {
+      if(baseName.equals(sections[i].name)) {
+        return i;
+      }
+    }
+  }
+  
+  return -1; // No pair found
+}
+
+// MODE 2: Living mode (random section activation with A/B pairing)
 void runMode2() {
   static bool sectionStates[NUM_SECTIONS];
   static unsigned long sectionTimers[NUM_SECTIONS];
@@ -171,7 +201,7 @@ void runMode2() {
   
   // Initialize on first run
   if(!initialized) {
-    Serial.println("Initializing Mode 2 (Living mode)");
+    Serial.println("Initializing Mode 2 (Living mode with A/B pairing)");
     for(int i = 0; i < NUM_SECTIONS; i++) {
       sectionStates[i] = false;
       sectionTimers[i] = millis();
@@ -190,20 +220,45 @@ void runMode2() {
       continue;
     }
     
+    // Skip "B" sections since they will be controlled by their "A" pair
+    if(strstr(sections[i].name, " B") != NULL) {
+      continue;
+    }
+    
     if(currentTime >= nextChangeTime[i]) {
       // Time to change state
-      sectionStates[i] = !sectionStates[i];
+      bool newState = !sectionStates[i];
+      sectionStates[i] = newState;
       anyChange = true;
       
-      if(sectionStates[i]) {
+      // Find paired section
+      int pairedIndex = findPairedSection(i);
+      
+      if(newState) {
         // Turning on
         Serial.print("Turning ON: ");
         Serial.println(sections[i].name);
+        
+        // Also turn on paired section if it exists
+        if(pairedIndex >= 0) {
+          sectionStates[pairedIndex] = true;
+          Serial.print("Turning ON paired: ");
+          Serial.println(sections[pairedIndex].name);
+        }
+        
         nextChangeTime[i] = currentTime + random(MODE2_MIN_ON_TIME, MODE2_MAX_ON_TIME);
       } else {
         // Turning off
         Serial.print("Turning OFF: ");
         Serial.println(sections[i].name);
+        
+        // Also turn off paired section if it exists
+        if(pairedIndex >= 0) {
+          sectionStates[pairedIndex] = false;
+          Serial.print("Turning OFF paired: ");
+          Serial.println(sections[pairedIndex].name);
+        }
+        
         nextChangeTime[i] = currentTime + random(MODE2_MIN_OFF_TIME, MODE2_MAX_OFF_TIME);
       }
     }
@@ -230,9 +285,9 @@ void runMode2() {
   delay(100); // Small delay for responsiveness
 }
 
-// MODE 3: Debug mode (test each section in order)
+// MODE 3: Debug mode (test each section in order with A/B pairing)
 void runMode3() {
-  Serial.println("Starting Mode 3 - Section Debug Cycle");
+  Serial.println("Starting Mode 3 - Section Debug Cycle (with A/B pairing)");
   
   // Go through each section in order
   for(int i = 0; i < NUM_SECTIONS; i++) {
@@ -243,8 +298,16 @@ void runMode3() {
       continue;
     }
     
+    // Skip "B" sections since they will be tested with their "A" pair
+    if(strstr(sections[i].name, " B") != NULL) {
+      continue;
+    }
+    
     // Clear all LEDs
     FastLED.clear();
+    
+    // Find paired section
+    int pairedIndex = findPairedSection(i);
     
     // Turn on current section
     Serial.print("Testing section: ");
@@ -253,27 +316,50 @@ void runMode3() {
     Serial.print(sections[i].start);
     Serial.print("-");
     Serial.print(sections[i].end);
-    Serial.println(")");
+    Serial.print(")");
     
-    // Light up the section
+    // Light up the main section
     for(int led = sections[i].start; led <= sections[i].end; led++) {
       if(led < NUM_LEDS) {
         leds[led] = MODE3_SECTION_COLOR;
       }
     }
     
+    // If there's a paired section, light it up too
+    if(pairedIndex >= 0) {
+      Serial.print(" + ");
+      Serial.print(sections[pairedIndex].name);
+      Serial.print(" (LEDs ");
+      Serial.print(sections[pairedIndex].start);
+      Serial.print("-");
+      Serial.print(sections[pairedIndex].end);
+      Serial.print(")");
+      
+      for(int led = sections[pairedIndex].start; led <= sections[pairedIndex].end; led++) {
+        if(led < NUM_LEDS) {
+          leds[led] = MODE3_SECTION_COLOR;
+        }
+      }
+    }
+    
+    Serial.println();
+    
     // Show the LEDs
     FastLED.show();
     
-    // Keep section on for specified time
+    // Keep section(s) on for specified time
     delay(MODE3_SECTION_DELAY);
     
-    // Turn off section
+    // Turn off section(s)
     FastLED.clear();
     FastLED.show();
     
     Serial.print("Section ");
     Serial.print(sections[i].name);
+    if(pairedIndex >= 0) {
+      Serial.print(" + ");
+      Serial.print(sections[pairedIndex].name);
+    }
     Serial.println(" turned OFF");
     
     // Delay between sections
