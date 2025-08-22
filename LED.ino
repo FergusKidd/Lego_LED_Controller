@@ -53,7 +53,7 @@ CRGB leds[NUM_LEDS];
 
 void setup() {
   // Serial for debugging
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Starting ESP32 FastLED Multi-Mode System...");
   
   // Add a small delay before initializing

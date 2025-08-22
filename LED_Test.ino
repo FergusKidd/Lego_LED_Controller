@@ -2,7 +2,7 @@
 
 // ==== CONFIGURATION SECTION - EASY TO EDIT ====
 #define NUM_LEDS 1       // Single LED
-#define DATA_PIN 4       // Try GPIO 4 instead of GPIO 2
+#define DATA_PIN 2       // Try GPIO 4 instead of GPIO 2
 #define LED_TYPE WS2812B // Your LED strip type
 #define COLOR_ORDER GRB  // GRB is correct
 
