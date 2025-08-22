@@ -1,7 +1,7 @@
 #include <FastLED.h>
 
 // ==== CONFIGURATION SECTION - EASY TO EDIT ====
-#define NUM_LEDS 1       // Single LED
+#define NUM_LEDS 3       // Change this to however many LEDs you have
 #define DATA_PIN 2       // Try GPIO 4 instead of GPIO 2
 #define LED_TYPE WS2812B // Your LED strip type
 #define COLOR_ORDER GRB  // GRB is correct
@@ -80,8 +80,9 @@ void loop() {
   
   // Cycle through all colors
   for(int i = 0; i < NUM_COLORS; i++) {
-    // Print what we're trying to do
-    Serial.print("Setting LED to color ");
+    Serial.print("Setting ALL ");
+    Serial.print(NUM_LEDS);
+    Serial.print(" LEDs to color ");
     Serial.print(i + 1);
     Serial.print("/");
     Serial.print(NUM_COLORS);
@@ -102,8 +103,10 @@ void loop() {
     
     Serial.println();
     
-    // Set the single LED to the current color
-    leds[0] = colors[i];
+    // Set ALL LEDs to the current color
+    for(int j = 0; j < NUM_LEDS; j++) {
+      leds[j] = colors[i];
+    }
     
     // Update the LED
     FastLED.show();
