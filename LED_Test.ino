@@ -1,7 +1,7 @@
 #include <FastLED.h>
 
 // ==== CONFIGURATION SECTION - EASY TO EDIT ====
-#define NUM_LEDS 3       // Change this to however many LEDs you have
+#define NUM_LEDS 4     // Change this to however many LEDs you have
 #define DATA_PIN 2       // Try GPIO 4 instead of GPIO 2
 #define LED_TYPE WS2812B // Your LED strip type
 #define COLOR_ORDER GRB  // GRB is correct
@@ -50,8 +50,8 @@ void setup() {
   // Initialize FastLED for ESP32
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   
-  // Set brightness lower for testing
-  FastLED.setBrightness(50);  // Reduced brightness for troubleshooting
+  // Set brightness (0-255, where 255 is maximum)
+  FastLED.setBrightness(100);  // Medium brightness for better visibility
   
   // Clear all LEDs at startup
   FastLED.clear();
